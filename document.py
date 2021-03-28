@@ -4,29 +4,34 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
+from collections import Counter
+from base_class import Base
 
-class Document:
-    def __init__(self, _name="", _id=-1, _content="", _topic=""):
-        self.name: str = _name
+class Document(Base):
+    def __init__(self, name="DOCUMENT", _filename="", _id=-1, _content="", _topic=""):
+        super().__init__(name)
+        self.filename: str = _filename
         self.id: int = _id
         self.content: str = _content
         self.topic: str = _topic
-        self.tokens: List[str]
-        self.features: List[float]
+        self.tokens: dict = dict()
+        # self.features: List[float] = []
+        self.tf: dict[str: float] = dict()
+        self.tf_idf: dict[str: float] = dict()
 
     def __str__(self):
-        return "\n### Document ###\nname: {}\nid: {}\ntopic: {}\n################\n".format(self.__name, self.__id,
+        return "\n### Document ###\nfilename: {}\nid: {}\ntopic: {}\n################\n".format(self.__filename, self.__id,
                                                                                         self.__topic)
 
     @property
-    def name(self):
-        return self.__name
+    def filename(self):
+        return self.__filename
 
-    @name.setter
-    def name(self, name: str):
-        if not (isinstance(name, str) or name is None):
-            raise TypeError("documents name must be a string")
-        self.__name = name
+    @filename.setter
+    def filename(self, filename: str):
+        if not (isinstance(filename, str) or filename is None):
+            raise TypeError("documents filename must be a string")
+        self.__filename = filename
 
     @property
     def id(self):
@@ -35,7 +40,7 @@ class Document:
     @id.setter
     def id(self, id: int):
         if not (isinstance(id, int) or id is None):
-            raise TypeError("documents name must be a string")
+            raise TypeError("documents filename must be a string")
         self.__id = id
 
     @property
@@ -45,7 +50,7 @@ class Document:
     @topic.setter
     def topic(self, topic: str):
         if not (isinstance(topic, str) or topic is None):
-            raise TypeError("documents name must be a string")
+            raise TypeError("documents filename must be a string")
         self.__topic = topic
 
     @property
@@ -53,9 +58,9 @@ class Document:
         return self.__tokens
 
     @tokens.setter
-    def tokens(self, tokens: List[str]):
-        if not ((isinstance(tokens, list) and all(isinstance(element, str) for element in tokens)) or tokens is None):
-            raise TypeError("features must be a list of strings")
+    def tokens(self, tokens: dict):
+        if not ((isinstance(tokens, dict) and all(isinstance(element, str) for element in tokens)) or tokens is None):
+            raise TypeError("tokens must be a dict: tokens[term]=number_of_occurencess")
         self.__tokens = tokens
 
     @property
@@ -69,6 +74,26 @@ class Document:
             raise TypeError("features must be a list of floats")
         self.__features = features
 
+    @property
+    def tf(self):
+        return self.__tf
+
+    @tf.setter
+    def tf(self, tf: dict):
+        if not (isinstance(tf, dict) or tf is None):
+            raise TypeError("TF of document must be a dict")
+        self.__tf = tf
+
+    @property
+    def tf_idf(self):
+        return self.__tf_idf
+
+    @tf_idf.setter
+    def tf_idf(self, tf_idf: dict):
+        if not (isinstance(tf_idf, dict) or tf_idf is None):
+            raise TypeError("TF-IDF of document must be a dict")
+        self.__tf_idf = tf_idf
+
     def read_content(self, filename: str = None):
         """
         Read file content and put it in self.content.
@@ -79,26 +104,25 @@ class Document:
             raise TypeError("Error: Filename must be a string")
         #TODO read file differently depending on file type, so .csv, .txt, no extension will be read differently
         # print(f.read())
-        if self.name != filename:
-            self.name = filename
+        if self.filename != filename:
+            self.filename = filename
 
-        print("Reading content from {}".format(self.name))
+        self.log_debug("Reading content from {}".format(self.filename))
         f = open(filename, "r", encoding="utf8")
         self.content = f.read()
 
     def tokenize(self) -> List[str]:
         """
         Convert document content to lower case and split it into tokens.
-        :return: self.tokens (list[str]):           list of tokens for document
+        :return: self.tokens (dict()):           dict of tokens for document with number of occurences per word
         """
-        print("Tokenizing {}".format(self.name))
+        self.log_debug("Tokenizing {}".format(self.filename))
         if self.content and isinstance(self.content, str):
             # self.tokens = []
             # for t in re.split(' |, |\n', self.content):
             #     if t != '':
             #         self.tokens.append(t)
-
-            self.tokens = list(set(word_tokenize(self.content)))
+            self.tokens = dict(sorted(Counter(word_tokenize(self.content)).items()))
         else:
             raise ValueError("Document content is not correct")
 
@@ -144,11 +168,13 @@ class Document:
         Remove all stop words (defined for english in nltk) from self.tokens
         :return: self.tokens:               list of document's tokens
         """
-        print("Removing stop words from {}".format(self.name))
-        if self.tokens and isinstance(self.tokens, list) and all(isinstance(element, str) for element in self.tokens):
+        self.log_debug("Removing stop words from {}".format(self.filename))
+        if self.tokens and isinstance(self.tokens, dict) and all(isinstance(element, str) for element in self.tokens):
             stop_words = set(stopwords.words('english'))
             # input(stop_words)
-            self.tokens = [w for w in self.tokens if w not in stop_words]
+            for w in list(self.tokens):
+                if w in stop_words:
+                    self.tokens.pop(w)
         else:
             raise ValueError("Document tokens are not correct")
 
@@ -160,11 +186,11 @@ class Document:
         :return: self.tokens:               list of document's tokens
         """
 
-        print("Lemmatizing tokens in {}".format(self.name))
-        if self.tokens and isinstance(self.tokens, list) and all(isinstance(element, str) for element in self.tokens):
+        self.log_debug("Lemmatizing tokens in {}".format(self.filename))
+        if self.tokens and isinstance(self.tokens, dict) and all(isinstance(element, str) for element in self.tokens):
             lemmatizer = WordNetLemmatizer()
             #TODO argument pos w WordNetLemmatizer ma wplyw na to czy dobrze lematyzuje, np. slowo better musi dostac argument pos="a", zeby zrobic z niego good
-            self.tokens = [lemmatizer.lemmatize(w) for w in self.tokens]
+            self.tokens = {lemmatizer.lemmatize(w): self.tokens[w] for w in self.tokens}
         else:
             raise ValueError("Document tokens are not correct")
 
@@ -176,10 +202,10 @@ class Document:
         :return: self.tokens:               list of document's tokens
         """
 
-        print("Stemming tokens in {}".format(self.name))
-        if self.tokens and isinstance(self.tokens, list) and all(isinstance(element, str) for element in self.tokens):
+        self.log_debug("Stemming tokens in {}".format(self.filename))
+        if self.tokens and isinstance(self.tokens, dict) and all(isinstance(element, str) for element in self.tokens):
             ps = PorterStemmer()
-            self.tokens = [ps.stem(w) for w in self.tokens]
+            self.tokens = {ps.stem(w): self.tokens[w] for w in self.tokens}
         else:
             raise ValueError("Document tokens are not correct")
 
@@ -197,7 +223,7 @@ class Document:
         :return:
 
         """
-        print("Preprocessing text in {}".format(self.name))
+        self.log_debug("Preprocessing text in {}".format(self.filename))
 
         if self.content and isinstance(self.content, str):
 
@@ -216,11 +242,8 @@ class Document:
             # 5. Stemm
             # self.stemm()
 
-            # leave only unique tokens
-            self.tokens = list(set(self.tokens))
-
             # sort tokens alphabetically
-            self.tokens.sort()
+            self.tokens = dict(sorted(self.tokens.items()))
 
         else:
             raise ValueError("Document content is not correct")
@@ -233,7 +256,7 @@ if __name__ == "__main__":
     print(d)
     d.read_content(filename="Computer_Science21.txt")
     print(d)
-    d.name = "bgadflb"
+    d.filename = "bgadflb"
     print(d.id)
     print(d.content)
     print("================================")
