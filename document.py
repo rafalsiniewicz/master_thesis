@@ -15,9 +15,9 @@ class Document(Base):
         self.content: str = _content
         self.topic: str = _topic
         self.tokens: dict = dict()
-        # self.features: List[float] = []
+        self.features: List[float] = []
         self.tf: dict[str: float] = dict()
-        self.tf_idf: dict[str: float] = dict()
+        self.tf_idf: dict[str: float] = dict()          # if tf_idf = 0, then the word doesnt appear in document
 
     def __str__(self):
         return "\n### Document ###\nfilename: {}\nid: {}\ntopic: {}\n################\n".format(self.__filename, self.__id,

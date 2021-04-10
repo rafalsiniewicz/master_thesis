@@ -1,37 +1,51 @@
-from random import uniform, shuffle, random
+from random import uniform, randint, random
 from numpy import exp
 from base_class import Base
+from statistics import mean
 
 
 class Particle(Base):
-    dimension = 0   # number of dimensions for particles
-    w = 0.5         # constant inertia weight (how much to weigh the previous velocity)
-    c1 = 1          # cognitive constant
-    c2 = 2          # social constant
-    num_features = 0
-    id = 0
+    w = 0.5  # constant inertia weight (how much to weigh the previous velocity)
+    c1 = 1  # cognitive constant
+    c2 = 2  # social constant
+    num_features_select = 0  # number of particle's features
+    id = 0  # particle id
+    features = []  # list of particle's features
 
     def __init__(self, name="PARTICLE", position=None, velocity=None):
         super().__init__(name)
         self.id = Particle.id
         Particle.id += 1
-        if Particle.num_features > Particle.dimension:
+        if Particle.num_features_select > len(Particle.features):
             raise ValueError("Number of features to select must be lower or equal to vector dimension")
         if position and isinstance(position, list) and all(element in [0, 1] for element in position):
             self.position = position
         elif position and (not isinstance(position, list) or not all(element in [0, 1] for element in position)):
             raise TypeError("Position of particles must be a list of binary values")
         else:
-            # initialize position vector as binary vector with exact "num_features" of 1's and the rest numbers are 0
-            selected = [1] * Particle.num_features  # list of 1's (selected features)
-            not_selected = [0] * (Particle.dimension - Particle.num_features)  # list of 0's ( not selected features)
-            self.position = selected + not_selected
-            shuffle(self.position)
+            """
+            Position values explanation:
+            self.position[i] = -1:  word doesnt exist in the document (tf_idf = 0)
+            self.position[i] = 0:   word exist in the document but is not selected
+            self.position[i] = 1:   word exist in the document and is selected as a feature
+            """
+            self.position = [-1] * len(Particle.features)  # initialize all positions as -1's
+            for i in range(len(Particle.features)):  # initialize position with tf_df != 0 for feature as 0
+                if Particle.features[i] != 0:
+                    self.position[i] = 0
+            # randomly choose "num_features_select" 1's, so randomly choose proper number of selected features (from 0's)
+            selected_features = 0
+            while selected_features < Particle.num_features_select:
+                selected = randint(0, len(self.position) - 1)
+                if self.position[selected] == 0:
+                    self.position[selected] = 1
+                    selected_features += 1
+
         if velocity and isinstance(position,
                                    list):  # TODO sprawdzic czy typy sa odpowiednie, tzn. tutaj lista wartosci float/int
             self.velocity = velocity
         else:
-            self.velocity = [uniform(-1, 1) for d in range(Particle.dimension)]
+            self.velocity = [uniform(-1, 1) for d in range(len(Particle.features))]
         self.best_position = []
         self.best_error = -1
         self.error = -1
@@ -46,9 +60,11 @@ class Particle(Base):
         v^{i}_{k+1} = w_{k}*v^{i}_{k} + c_{1}*r_{1}*(p^{i}_{k} - x^{i}_{k}) + c_{2}*r_{2}*(p^{g}_{k} - x^{i}_{k})
         :param best_global_position:
         :return:
+
+
         """
-        self.log_debug("Updating particle's velocity")
-        for i in range(Particle.dimension):
+        # self.log_debug("Updating particle's velocity")
+        for i in range(len(Particle.features)):
             r1 = random()
             r2 = random()
 
@@ -61,9 +77,9 @@ class Particle(Base):
         Update particle position.
         :return:
         """
-        self.log_debug("Updating particle's position")
-        for i in range(Particle.dimension):
-            if random() < self.sigmoid(self.velocity[i]):
+        # self.log_debug("Updating particle's position")
+        for i in range(len(Particle.features)):
+            if random() < self.sigmoid(self.velocity[i]) and self.position[i] != -1:
                 self.position[i] = 1
             else:
                 self.position[i] = 0
@@ -72,7 +88,7 @@ class Particle(Base):
         self.error = self.cost_function()
 
         # check to see if the current position is an individual best
-        if self.error < self.best_error or self.best_error == -1:
+        if self.error > self.best_error or self.best_error == -1:
             self.best_position = self.position
             self.best_error = self.error
 
@@ -89,6 +105,16 @@ class Particle(Base):
         :return:
         """
         MAD = 0
-        # TODO implement MAD as a cost function
-        pass
+        solution = []  # selected features values
+        for i in range(len(self.position)):
+            if self.position[i] == 1:
+                solution.append(Particle.features[i])
+
+        average_solution = mean(solution)
+        for i in solution:
+            MAD += abs(i - average_solution)
+
+        MAD = MAD / len(solution)
+        # print("MAD: ", MAD)
+
         return MAD

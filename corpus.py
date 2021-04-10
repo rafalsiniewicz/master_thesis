@@ -60,7 +60,8 @@ class Corpus(Base):
                 self.idf[term] = log(len(self.documents) / (self.df[term] + 1))
                 doc.tf_idf[term] = doc.tf[term] * self.idf[term]
 
-        return self.tf_idf
+        for doc in self.documents:
+            doc.features = list(doc.tf_idf.values())
 
 
 if __name__ == "__main__":
@@ -74,6 +75,7 @@ if __name__ == "__main__":
     c.tf_idf()
     for d in c.documents:
         # print("d.tf: ", d.tf)
+        print("d.tf: ", d.tf)
         print("d.tf_idf: ", d.tf_idf)
     # print("df:", c.df)
 
