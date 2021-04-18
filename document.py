@@ -1,11 +1,10 @@
-from typing import List
 import re
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from collections import Counter
-from base_class import Base
+from base_class import *
 
 class Document(Base):
     def __init__(self, name="DOCUMENT", _filename="", _id=-1, _content="", _topic=""):
@@ -15,7 +14,7 @@ class Document(Base):
         self.content: str = _content
         self.topic: str = _topic
         self.tokens: dict = dict()
-        self.features: List[float] = []
+        self.features: List[float] = []                 # list of all features for document
         self.tf: dict[str: float] = dict()
         self.tf_idf: dict[str: float] = dict()          # if tf_idf = 0, then the word doesnt appear in document
 

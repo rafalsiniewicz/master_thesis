@@ -1,6 +1,6 @@
 from random import uniform, randint, random
 from numpy import exp
-from base_class import Base
+from base_class import *
 from statistics import mean
 
 
@@ -78,11 +78,13 @@ class Particle(Base):
         :return:
         """
         # self.log_debug("Updating particle's position")
+
         for i in range(len(Particle.features)):
-            if random() < self.sigmoid(self.velocity[i]) and self.position[i] != -1:
-                self.position[i] = 1
-            else:
-                self.position[i] = 0
+            if self.position[i] != -1:
+                if random() < self.sigmoid(self.velocity[i]):
+                    self.position[i] = 1
+                else:
+                    self.position[i] = 0
 
     def evaluate(self):
         self.error = self.cost_function()

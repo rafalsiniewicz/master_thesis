@@ -1,5 +1,5 @@
 from logger import Logger
-
+from typing import List
 
 class Base:
     def __init__(self, name):

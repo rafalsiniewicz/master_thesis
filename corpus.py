@@ -6,7 +6,7 @@ class Corpus(Base):
     def __init__(self, name="CORPUS"):
         super().__init__(name)
         self.documents: List[Document] = []
-        self.number_of_docs: int = 0
+        # self.number_of_docs: int = 0
         self.vocabulary: List[str] = []             # list of all unique words in the corpus
         # self.features: List[List[float]] = None     #
         self.df: dict[str: float] = dict()
