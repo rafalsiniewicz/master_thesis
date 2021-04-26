@@ -41,7 +41,7 @@ class PSO(Base):
         self.swarm = [Particle() for d in range(self.num_particles)]
         return self.swarm
 
-    def select_features(self):
+    def get_values_for_selected_features(self):
         """
         Leave only selected features (values) in vector. The rest is set to:
          a) -1: in case the feature doesn't appear in document or
@@ -58,7 +58,7 @@ class PSO(Base):
         return selected_features
 
 
-    def run(self, normalize=True):
+    def run(self, get_values_for_selected_features=True):
         """
         Run PSO algorithm.
         :return self.best_particle:         # best particle object from whole swarm (best solution)
@@ -90,11 +90,13 @@ class PSO(Base):
         print("self.best_global_error", self.best_global_error)
         print("self.best_particle:", self.best_particle)
 
-        if normalize:
+        if get_values_for_selected_features:
+            # take float tf_idf values for selected features (values 1 in particle vector)
+            sf = self.get_values_for_selected_features()
             # add selected features to list of all selected features for all documents
-            sf = self.select_features()
             PSO.selected_features.append(sf)
         else:
+            # add selected features to list of all selected features for all documents
             PSO.selected_features.append(self.best_global_position)
 
         return self.best_particle

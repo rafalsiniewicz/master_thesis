@@ -7,8 +7,8 @@ if __name__ == "__main__":
     c.get_vocabulary()
     c.tf_idf()
     features = []
-    # for k in range(len(c.documents)):
-    #     features.append(c.documents[k].features)
+    for k in range(len(c.documents)):
+        features.append(c.documents[k].features)
     for k in range(len(c.documents)):
         pso = PSO(features=c.documents[k].features, max_iter=1)
         pso.set_particles_parameters()
@@ -21,8 +21,12 @@ if __name__ == "__main__":
     # for i in PSO.selected_features:
     #     # print(i)
     #     print(len(i))
-    kmeans = Clustering(features=PSO.selected_features)
+    kmeans = Clustering(features=PSO.selected_features, n_clusters=3)
+    # kmeans = Clustering(features=features, n_clusters=3)
     kmeans.run()
     kmeans.validate_clustering()
+    print("Document\tlabel")
+    for i, d in enumerate(c.documents):
+        print("{}\t{}".format(d.filename, kmeans.labels[i]))
     # for i in PSO.selected_features:
     #     print(i)
