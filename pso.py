@@ -6,7 +6,7 @@ from copy import deepcopy
 
 
 class PSO(Base):
-    selected_features = []
+    selected_features = []  # list of all selected features for all documents
     def __init__(self, name="PSO", num_features_select=3, max_iter=100, num_particles=10, features=[]):
         super().__init__(name)
         self.num_features_select: int = num_features_select  # number of features to select
@@ -53,7 +53,7 @@ class PSO(Base):
             if self.best_global_position[i] == 1:
                 selected_features.append(self.features[i])
             else:
-                selected_features.append(self.best_global_position[i])
+                selected_features.append(float(self.best_global_position[i]))
 
         return selected_features
 

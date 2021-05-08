@@ -101,22 +101,28 @@ class Particle(Base):
 
         return sig
 
-    def cost_function(self):
+    def cost_function(self, function='MAD'):
         """
         Calculate cost funtion value for particle.
         :return:
         """
-        MAD = 0
+        if function not in ['MAD', 'MAX']:
+            raise ValueError("Function must be MAD or MAX")
+        result = 0
         solution = []  # selected features values
         for i in range(len(self.position)):
             if self.position[i] == 1:
                 solution.append(Particle.features[i])
+        if function == 'MAD':
+            average_solution = mean(solution)
+            for i in solution:
+                result += abs(i - average_solution)
 
-        average_solution = mean(solution)
-        for i in solution:
-            MAD += abs(i - average_solution)
+            result = result / len(solution)
+            # print("result: ", result)
+        elif function == 'MAX':
+            for i in solution:
+                result += i
+            # print("result: ", result)
 
-        MAD = MAD / len(solution)
-        # print("MAD: ", MAD)
-
-        return MAD
+        return result

@@ -15,6 +15,7 @@ class Document(Base):
         self.topic: str = _topic
         self.tokens: dict = dict()
         self.features: List[float] = []                 # list of all features for document
+        self.selected_features: List[float] = []        # list of selected features for document
         self.tf: dict[str: float] = dict()
         self.tf_idf: dict[str: float] = dict()          # if tf_idf = 0, then the word doesnt appear in document
 
