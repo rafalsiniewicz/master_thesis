@@ -68,9 +68,9 @@ class Particle(Base):
             r1 = random()
             r2 = random()
 
-            vel_cognitive = Particle.c1 * r1 * (self.best_position[i] - self.position[i])
-            vel_social = Particle.c2 * r2 * (best_global_position[i] - self.position[i])
-            self.velocity[i] = Particle.w * self.velocity[i] + vel_cognitive + vel_social
+            vel_cognitive = self.c1 * r1 * (self.best_position[i] - self.position[i])
+            vel_social = self.c2 * r2 * (best_global_position[i] - self.position[i])
+            self.velocity[i] = self.w * self.velocity[i] + vel_cognitive + vel_social
 
     def update_position(self):
         """
@@ -87,7 +87,7 @@ class Particle(Base):
                     self.position[i] = 0
 
     def evaluate(self):
-        self.error = self.cost_function()
+        self.error = self.cost_function(function='MAD')
 
         # check to see if the current position is an individual best
         if self.error > self.best_error or self.best_error == -1:

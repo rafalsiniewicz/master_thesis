@@ -1,16 +1,17 @@
-from sklearn.metrics import silhouette_score, adjusted_rand_score
+from sklearn.metrics import silhouette_score, adjusted_rand_score, davies_bouldin_score
 from base_class import *
 from sklearn.cluster import KMeans
 from math import sqrt
 from random import randint
+import matplotlib.pyplot as plt
 
 
 class Clustering:
     def __init__(self, features=[], max_iter=100, n_clusters=3, n_init=10, init_type='random'):
         self.features: List[List[float]] = features  # list of features for clustering
-        self.max_iter: int = max_iter # Maximum number of iterations of the k-means algorithm for a single run.
+        self.max_iter: int = max_iter  # Maximum number of iterations of the k-means algorithm for a single run.
         self.clustering_method = None
-        self.n_clusters: int = n_clusters # The number of clusters to form as well as the number of centroids to generate
+        self.n_clusters: int = n_clusters  # The number of clusters to form as well as the number of centroids to generate
         self.n_init: int = n_init  # Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the best output of n_init consecutive runs in terms of inertia.
         self.labels = None
         self.init_type: str = init_type
@@ -40,18 +41,21 @@ class Clustering:
         1. Select random centroid for each cluster
         2. Assign all the points to the closest cluster centroid
         3. Recompute centroids of newly formed clusters
-        4. Repeat steps 2 and 3 until stop criteria is met
-        5. Repeat all above points (one Kmeans algorithm run) n times (with different centroid seeds) to get the best result in terms of inertia
+        4. Check if intracluster distances exceeds tolerance threshold
+        5. Repeat steps 2 and 3 until stop criteria is met
+        6. Repeat all above points (one Kmeans algorithm run) n times (with different centroid seeds) to get the best result in terms of inertia
         :return:
         """
         tolerance = 0.0001
         best_inertia = -1
         best_classifications = None
         best_temp = None
+        # 6. Repeat all above points (one Kmeans algorithm run) n times (with different centroid seeds) to get the best result in terms of inertia
         for r in range(self.n_init):
             # 1. Select random centroid for each cluster
             centroids = {}
             selected_centroids = []
+            # 5. Repeat steps 2 and 3 until stop criteria is met
             for i in range(self.n_clusters):
                 # centroids[i] = self.features[i]
                 rand_fs_idx = randint(0, len(self.features) - 1)  # random feature set index
@@ -84,6 +88,7 @@ class Clustering:
                 print("classifications ")
                 for i in temp:
                     print(i, temp[i])
+                # 4. Check if intracluster distances exceeds tolerance threshold
                 optimized = True
                 for c in centroids:
                     original_centroid = prev_centroids[c]
@@ -161,18 +166,76 @@ class Clustering:
 
     def inertia(self, classifications, centroids):
         """
-        Calculate inertia which represents the sum of intracluster distances.
+        Calculate inertia which represents the sum of squared intracluster distances.
         :param classifications (dict):   classification of points to clusters, e.g. {0: [fs1, fs2], 1: [fs3], 2: [fs4, fs5]}
         :param centroids (dict):         centroids of clusters, e.g. {0: c1, 1: c2}, where c1 is vector represents point (centroid) position
-        :return inertia (float):         sum of intracluster distances
+        :return inertia (float):         sum of squared intracluster distances
         """
         inertia = 0
         for centroid in centroids:
             intra_distance = 0
             for fs in classifications[centroid]:
-                intra_distance += self.euclidean_distance(centroids[centroid], fs)**2
+                intra_distance += self.euclidean_distance(centroids[centroid], fs) ** 2
             inertia += intra_distance
 
         print("inertia = {}".format(inertia))
         return inertia
 
+    def elbow_method(self):
+        distortions = []
+        if len(self.features) - 1 >= 10:
+            k_max = 10
+        else:
+            k_max = len(self.features) - 1
+        K = range(1, k_max)
+        for k in K:
+            kmeanModel = KMeans(n_clusters=k, n_init=self.n_init).fit(self.features)
+            distortions.append(kmeanModel.inertia_)
+
+        plt.figure(figsize=(16, 8))
+        plt.plot(K, distortions, 'bx-')
+        plt.xlabel('k')
+        plt.ylabel('Distortion')
+        plt.title('The Elbow Method showing the optimal k')
+        plt.show()
+
+    def silhoulette_score(self):
+        sil = []
+        if len(self.features) - 1 >= 10:
+            k_max = 10
+        else:
+            k_max = len(self.features) - 1
+        K = range(2, k_max)
+
+        # dissimilarity would not be defined for a single cluster, thus, minimum number of clusters should be 2
+        for k in K:
+            kmeans = KMeans(n_clusters=k, n_init=self.n_init).fit(self.features)
+            labels = kmeans.labels_
+            sil.append(silhouette_score(self.features, labels, metric='euclidean'))
+
+        plt.figure(figsize=(16, 8))
+        plt.plot(K, sil, 'bx-')
+        plt.xlabel('k')
+        plt.ylabel('Silhoulette score')
+        plt.title('Silhoulette score showing the optimal k')
+        plt.show()
+
+
+    def davies_bouldin_index(self):
+        scores = []
+        if len(self.features) - 1 >= 10:
+            k_max = 10
+        else:
+            k_max = len(self.features) - 1
+        K = range(2, k_max)
+        for k in K:
+            kmeans = KMeans(n_clusters=k, n_init=self.n_init)
+            model = kmeans.fit_predict(self.features)
+            score = davies_bouldin_score(self.features, model)
+            scores.append(score)
+
+        plt.plot(K, scores, linestyle='--', marker='o', color='b')
+        plt.xlabel('K')
+        plt.ylabel('Davies Bouldin score')
+        plt.title('Davies Bouldin score vs. K')
+        plt.show()

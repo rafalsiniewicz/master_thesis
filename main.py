@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
 
     for k in range(len(c.documents)):
-        pso = PSO(features=c.documents[k].features, max_iter=1, num_features_select=3)
+        pso = PSO(features=c.documents[k].features, max_iter=10, num_features_select=3)
         pso.set_particles_parameters()
         pso.initialize_swarm()
         # for i in pso.swarm:
@@ -48,7 +48,10 @@ if __name__ == "__main__":
     # for i in PSO.selected_features:
     #     # print(i)
     #     print(len(i))
-    kmeans = Clustering(features=PSO.selected_features, n_clusters=3, max_iter=100, n_init=10, init_type='k-means++')
+    kmeans = Clustering(features=PSO.selected_features, n_clusters=3, max_iter=100, n_init=100, init_type='k-means++')
+    kmeans.elbow_method()
+    kmeans.silhoulette_score()
+    kmeans.davies_bouldin_index()
     # kmeans = Clustering(features=features, n_clusters=3)
     kmeans.run(sklearn_method=False)
     kmeans.run()
@@ -56,5 +59,7 @@ if __name__ == "__main__":
     print("Document\tlabel")
     for i, d in enumerate(c.documents):
         print("{}\t{}".format(d.filename, kmeans.labels[i]))
-    # for i in PSO.selected_features:
+    # for i in PS
+    #
+    # O.selected_features:
     #     print(i)
