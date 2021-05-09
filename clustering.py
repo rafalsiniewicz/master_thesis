@@ -1,9 +1,10 @@
-from sklearn.metrics import silhouette_score, adjusted_rand_score, davies_bouldin_score
+from sklearn.metrics import silhouette_score, adjusted_rand_score, davies_bouldin_score, v_measure_score
 from base_class import *
 from sklearn.cluster import KMeans
 from math import sqrt
 from random import randint
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Clustering:
@@ -13,7 +14,7 @@ class Clustering:
         self.clustering_method = None
         self.n_clusters: int = n_clusters  # The number of clusters to form as well as the number of centroids to generate
         self.n_init: int = n_init  # Number of time the k-means algorithm will be run with different centroid seeds. The final results will be the best output of n_init consecutive runs in terms of inertia.
-        self.labels = None
+        self.labels: List[int] = []
         self.init_type: str = init_type
 
     def run(self, sklearn_method=True):
@@ -35,6 +36,62 @@ class Clustering:
             self.labels = self.clustering_method
             print("labels: ", self.labels)
 
+    def initialize_centroids(self, init_type):
+        centroids = {}
+        if init_type == 'random':
+            selected_centroids = []
+            for i in range(self.n_clusters):
+                rand_fs_idx = randint(0, len(self.features) - 1)  # random feature set index
+                while rand_fs_idx in selected_centroids:
+                    rand_fs_idx = randint(0, len(self.features) - 1)
+                centroids[i] = self.features[rand_fs_idx]
+                selected_centroids.append(rand_fs_idx)
+        elif init_type == 'k-means++':
+            '''Initialize one point at random.
+                loop for k - 1 iterations:
+                    Next, calculate for each point the distance of the point from its nearest center. Sample a point with a 
+                    probability proportional to the square of the distance of the point from its nearest center.'''
+            centers = []
+            X = np.array(self.features)
+
+            # Sample the first point
+            initial_index = np.random.choice(range(X.shape[0]), )
+            centers.append(X[initial_index, :].tolist())
+
+            print('max: ', np.max(np.sum((X - np.array(centers)) ** 2)))
+
+            # Loop and select the remaining points
+            for i in range(self.n_clusters - 1):
+                print(i)
+                distance = self.dist(X, np.array(centers))
+
+                if i == 0:
+                    pdf = distance / np.sum(distance)
+                    centroid_new = X[np.random.choice(range(X.shape[0]), replace=False, p=pdf.flatten())]
+                else:
+                    # Calculate the distance of each point from its nearest centroid
+                    dist_min = np.min(distance, axis=1)
+                    pdf_method = True
+                    if pdf_method:
+                        pdf = dist_min / np.sum(dist_min)
+                        # Sample one point from the given distribution
+                        centroid_new = X[np.random.choice(range(X.shape[0]), replace=False, p=pdf)]
+                    else:
+                        index_max = np.argmax(dist_min, axis=0)
+                        centroid_new = X[index_max, :]
+                centers.append(centroid_new.tolist())
+            for i, c in enumerate(centers):
+                centroids[i] = c
+        else:
+            raise ValueError("init_type must be: random or k-means++")
+
+        return centroids
+
+    @staticmethod
+    def dist(data, centers):
+        distance = np.sum((np.array(centers) - data[:, None, :]) ** 2, axis=2)
+        return distance
+
     def fit(self):
         """
         Authors method of Kmeans algorithm. Steps:
@@ -52,18 +109,10 @@ class Clustering:
         best_temp = None
         # 6. Repeat all above points (one Kmeans algorithm run) n times (with different centroid seeds) to get the best result in terms of inertia
         for r in range(self.n_init):
-            # 1. Select random centroid for each cluster
-            centroids = {}
-            selected_centroids = []
-            # 5. Repeat steps 2 and 3 until stop criteria is met
-            for i in range(self.n_clusters):
-                # centroids[i] = self.features[i]
-                rand_fs_idx = randint(0, len(self.features) - 1)  # random feature set index
-                while rand_fs_idx in selected_centroids:
-                    rand_fs_idx = randint(0, len(self.features) - 1)
-                centroids[i] = self.features[rand_fs_idx]
-                selected_centroids.append(rand_fs_idx)
+            # 1. Select centroids for each cluster
+            centroids = self.initialize_centroids(init_type=self.init_type)
 
+            # 5. Repeat steps 2 and 3 until stop criteria is met
             for i in range(self.max_iter):
                 print("iteration {}".format(i))
                 # 2. Assign all the points to the closest cluster centroid
@@ -123,10 +172,21 @@ class Clustering:
         return labels
 
     def validate_clustering(self):
-        silhouette = silhouette_score(self.features, self.clustering_method.labels_).round(2)
-        print("silhouette: ", silhouette)
-        # ari = adjusted_rand_score([5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], self.clustering_method.labels_)
-        # print("ari", ari)
+        """
+        Print validation scores for clustering
+        :return:
+        """
+        print("### Clustering validation scores ###")
+        if self.labels is not []:
+            print("silhouette_score: ", silhouette_score(X=self.features, labels=self.labels))
+            print("v_measure_score: ", v_measure_score(
+                labels_true=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2,
+                             2, 2, 2, 2], labels_pred=self.labels))
+            print("adjusted_rand_score: ", adjusted_rand_score(labels_true=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2,
+                             2, 2, 2, 2], labels_pred=self.labels))
+            print("davies_bouldin_score: ", davies_bouldin_score(X=self.features, labels=self.labels))
+        else:
+            raise TypeError("Labels are not set")
 
     @staticmethod
     def euclidean_distance(p1, p2):
@@ -160,7 +220,7 @@ class Clustering:
                 avg[j] += vectors[i][j]
 
         avg = [avg[i] / len(vectors) for i in range(len(vectors[0]))]
-        print("avg ", avg)
+        # print("avg ", avg)
 
         return avg
 
@@ -181,7 +241,23 @@ class Clustering:
         print("inertia = {}".format(inertia))
         return inertia
 
+    def determine_optimal_number_of_clusters(self, method='elbow_method'):
+        """
+        Call proper method to determine proper number of clusters.
+        :param method (str):        method to call, e.g. elbow_method, silhoulette_method, davies_bouldin_method
+        :return:
+        """
+        if method not in ['elbow_method', 'silhoulette_method', 'davies_bouldin_method']:
+            raise ValueError("Method must be: elbow_method, silhoulette_method or davies_bouldin_method")
+
+        method_to_call = getattr(Clustering, method)
+        method_to_call(self)
+
     def elbow_method(self):
+        """
+        Elbow method for determining optimal number of clusters
+        :return:
+        """
         distortions = []
         if len(self.features) - 1 >= 10:
             k_max = 10
@@ -199,7 +275,11 @@ class Clustering:
         plt.title('The Elbow Method showing the optimal k')
         plt.show()
 
-    def silhoulette_score(self):
+    def silhoulette_method(self):
+        """
+        Silhoulette method for determining optimal number of clusters
+        :return:
+        """
         sil = []
         if len(self.features) - 1 >= 10:
             k_max = 10
@@ -220,8 +300,11 @@ class Clustering:
         plt.title('Silhoulette score showing the optimal k')
         plt.show()
 
-
-    def davies_bouldin_index(self):
+    def davies_bouldin_method(self):
+        """
+        Davies-Bouldin method for determining optimal number of clusters
+        :return:
+        """
         scores = []
         if len(self.features) - 1 >= 10:
             k_max = 10
