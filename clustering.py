@@ -17,7 +17,7 @@ class Clustering:
         self.labels: List[int] = []
         self.init_type: str = init_type
 
-    def run(self, sklearn_method=True):
+    def run(self, sklearn_method=True, show_logs=True):
         """
         Cluster features data.
         :param sklearn_method(bool):    if True then sklearn KMeans class fit() method is used. If False then authors method is used.
@@ -32,7 +32,7 @@ class Clustering:
             print("kmeans.n_iter_", self.clustering_method.n_iter_)
             print("kmeans.inertia_", self.clustering_method.inertia_)
         else:
-            self.clustering_method = self.fit()
+            self.clustering_method = self.fit(show_logs=show_logs)
             self.labels = self.clustering_method
             print("labels: ", self.labels)
 
@@ -92,7 +92,7 @@ class Clustering:
         distance = np.sum((np.array(centers) - data[:, None, :]) ** 2, axis=2)
         return distance
 
-    def fit(self):
+    def fit(self, show_logs=True):
         """
         Authors method of Kmeans algorithm. Steps:
         1. Select random centroid for each cluster
@@ -114,7 +114,8 @@ class Clustering:
 
             # 5. Repeat steps 2 and 3 until stop criteria is met
             for i in range(self.max_iter):
-                print("iteration {}".format(i))
+                if show_logs:
+                    print("iteration {}".format(i))
                 # 2. Assign all the points to the closest cluster centroid
                 classifications = {}
                 temp = {}
@@ -134,9 +135,10 @@ class Clustering:
                 for classification in classifications:
                     centroids[classification] = self.average(classifications[classification])
 
-                print("classifications ")
-                for i in temp:
-                    print(i, temp[i])
+                if show_logs:
+                    print("classifications ")
+                    for i in temp:
+                        print(i, temp[i])
                 # 4. Check if intracluster distances exceeds tolerance threshold
                 optimized = True
                 for c in centroids:
@@ -146,7 +148,8 @@ class Clustering:
                     for j in range(len(current_centroid)):
                         difference += (current_centroid[j] - original_centroid[j])
                     if difference > tolerance:
-                        print("difference = {}".format(difference))
+                        if show_logs:
+                            print("difference = {}".format(difference))
                         optimized = False
 
                 if optimized:

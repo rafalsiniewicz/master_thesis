@@ -13,7 +13,7 @@ class Document(Base):
         self.id: int = _id
         self.content: str = _content
         self.topic: str = _topic
-        self.tokens: dict = dict()
+        self.tokens: dict[str: int] = dict()
         self.features: List[float] = []                 # list of all features for document
         self.selected_features: List[float] = []        # list of selected features for document
         self.tf: dict[str: float] = dict()
@@ -153,7 +153,11 @@ class Document(Base):
             self.content = re.sub(r'\d+', '', self.content)
 
             # 4. Remove punctuation
+            punc = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
             self.content = re.sub(r'[^\w\s]', '', self.content)
+            for ele in self.content:
+                if ele in punc:
+                    self.content = self.content.replace(ele, "")
 
             # 5. Remove whitespaces
             self.content = self.content.strip()

@@ -1,8 +1,10 @@
 from pso import *
 from clustering import *
 from base_class import *
+import time
 if __name__ == "__main__":
     for iteration in range(3):
+        start = time.time()
         PSO.selected_features = []
         c = Corpus()
         c.read_documents()
@@ -22,13 +24,14 @@ if __name__ == "__main__":
 
 
         for k in range(len(c.documents)):
-            pso = PSO(features=c.documents[k].features, max_iter=10, num_features_select=3)
+            pso = PSO(features=c.documents[k].features, max_iter=10, num_features_select=3, num_particles=10, evaluate_function='MAD')
             pso.set_particles_parameters()
+            # pso.set_particles_parameters(w=10, c1=1, c2=20)
             pso.initialize_swarm()
             # for i in pso.swarm:
             #     print(i)
 
-            pso.run()
+            pso.run(show_logs=False)
             c.documents[k].selected_features = PSO.selected_features[k]
 
         # sel_fs = {}
@@ -50,17 +53,17 @@ if __name__ == "__main__":
         # for i in PSO.selected_features:
         #     # print(i)
         #     print(len(i))
-        kmeans = Clustering(features=PSO.selected_features, n_clusters=3, max_iter=100, n_init=200, init_type='k-means++')
-        # kmeans = Clustering(features=features, n_clusters=2, max_iter=100, n_init=100, init_type='k-means++')
+        kmeans = Clustering(features=PSO.selected_features, n_clusters=4, max_iter=10, n_init=100, init_type='k-means++')
+        # kmeans = Clustering(features=features, n_clusters=3, max_iter=100, n_init=100, init_type='k-means++')
         # kmeans.determine_optimal_number_of_clusters(method='silhoulette_method')
         # kmeans.elbow_method()
         # kmeans.silhoulette_method()
         # kmeans.davies_bouldin_method()
 
-        kmeans.run(sklearn_method=False)
-        kmeans.validate_clustering()
+        kmeans.run(sklearn_method=False, show_logs=True)
+        # kmeans.validate_clustering()
         kmeans.run()
-        kmeans.validate_clustering()
+        # kmeans.validate_clustering()
         print("Document\tlabel")
         for i, d in enumerate(c.documents):
             print("{}\t{}".format(d.filename, kmeans.labels[i]))
@@ -68,3 +71,5 @@ if __name__ == "__main__":
         #
         # O.selected_features:
         #     print(i)
+        end = time.time()
+        print("Time elapsed: ", end - start)  # CPU seconds elapsed (floating point)

@@ -7,7 +7,7 @@ from copy import deepcopy
 
 class PSO(Base):
     selected_features = []  # list of all selected features for all documents
-    def __init__(self, name="PSO", num_features_select=3, max_iter=100, num_particles=10, features=[]):
+    def __init__(self, name="PSO", num_features_select=3, max_iter=100, num_particles=10, features=[], evaluate_function='MAD'):
         super().__init__(name)
         self.num_features_select: int = num_features_select  # number of features to select
         self.features: List[float] = features  # features for all particles (vector of tf_idf values)
@@ -17,13 +17,14 @@ class PSO(Base):
         self.best_global_error: float = -1  # best error of all particles in swarm
         self.num_particles: int = num_particles
         self.best_particle = None
+        self.evaluate_function: str = evaluate_function     # MAD or MAX (check in Particle class)
 
     def set_particles_parameters(self, w=0.5, c1=1, c2=2):
         """
         Set parameters for all particles.
-        :param w:
-        :param c1:
-        :param c2:
+        :param w:       # constant inertia weight (how much to weigh the previous velocity)
+        :param c1:      # cognitive constant
+        :param c2:      # social constant
         :return:
         """
         Particle.num_features_select = self.num_features_select
@@ -58,7 +59,7 @@ class PSO(Base):
         return selected_features
 
 
-    def run(self, get_values_for_selected_features=True):
+    def run(self, get_values_for_selected_features=True, show_logs=True):
         """
         Run PSO algorithm.
         :return self.best_particle:         # best particle object from whole swarm (best solution)
@@ -70,7 +71,7 @@ class PSO(Base):
             # print i,err_best_g
             # cycle through particles in swarm and evaluate fitness
             for j in range(self.num_particles):
-                self.swarm[j].evaluate()
+                self.swarm[j].evaluate(function=self.evaluate_function)
                 # determine if current particle is the best (globally)
                 if self.swarm[j].error > self.best_global_error or self.best_global_error == -1:
                     self.best_global_position = list(self.swarm[j].position)
@@ -85,10 +86,11 @@ class PSO(Base):
             i += 1
 
         # print final results
-        print('FINAL:\n')
-        print("self.best_global_position", self.best_global_position)
-        print("self.best_global_error", self.best_global_error)
-        print("self.best_particle:", self.best_particle)
+        if show_logs:
+            print('FINAL:\n')
+            print("self.best_global_position", self.best_global_position)
+            print("self.best_global_error", self.best_global_error)
+            print("self.best_particle:", self.best_particle)
 
         if get_values_for_selected_features:
             # take float tf_idf values for selected features (values 1 in particle vector)

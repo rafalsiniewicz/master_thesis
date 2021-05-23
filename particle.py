@@ -18,7 +18,7 @@ class Particle(Base):
         Particle.id += 1
         if Particle.num_features_select > len(Particle.features):
             raise ValueError("Number of features to select must be lower or equal to vector dimension")
-        if position and isinstance(position, list) and all(element in [0, 1] for element in position):
+        if position and isinstance(position, list) and all(element in [-1, 0, 1] for element in position):
             self.position = position
         elif position and (not isinstance(position, list) or not all(element in [0, 1] for element in position)):
             raise TypeError("Position of particles must be a list of binary values")
@@ -86,8 +86,8 @@ class Particle(Base):
                 else:
                     self.position[i] = 0
 
-    def evaluate(self):
-        self.error = self.cost_function(function='MAD')
+    def evaluate(self, function='MAD'):
+        self.error = self.cost_function(function=function)
 
         # check to see if the current position is an individual best
         if self.error > self.best_error or self.best_error == -1:
