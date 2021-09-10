@@ -7,7 +7,9 @@ from copy import deepcopy
 
 class PSO(Base):
     selected_features = []  # list of all selected features for all documents
-    def __init__(self, name="PSO", num_features_select=3, max_iter=100, num_particles=10, features=[], evaluate_function='MAD'):
+
+    def __init__(self, name="PSO", num_features_select=3, max_iter=100, num_particles=10, features=[],
+                 evaluate_function='MAD'):
         super().__init__(name)
         self.num_features_select: int = num_features_select  # number of features to select
         self.features: List[float] = features  # features for all particles (vector of tf_idf values)
@@ -17,7 +19,7 @@ class PSO(Base):
         self.best_global_error: float = -1  # best error of all particles in swarm
         self.num_particles: int = num_particles
         self.best_particle = None
-        self.evaluate_function: str = evaluate_function     # MAD or MAX (check in Particle class)
+        self.evaluate_function: str = evaluate_function  # MAD or MAX (check in Particle class)
 
     def set_particles_parameters(self, w=0.5, c1=1, c2=2):
         """
@@ -25,6 +27,17 @@ class PSO(Base):
         :param w:       # constant inertia weight (how much to weigh the previous velocity)
         :param c1:      # cognitive constant
         :param c2:      # social constant
+        c1 + c2 powinno byc <=4, c1 zeby bylo rowne c2 czesto podaja w literaturze
+        w dowolna w zasadzie
+        Sposoby znajdowania najlepszych parametrow:
+        1. The authors of [10] recommended the values: ω= 0.715 and cg=cl= 1.7 [link: chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/https://res.mdpi.com/d_attachment/sustainability/sustainability-13-01008/article_deploy/sustainability-13-01008-v2.pdf]
+        2. wmax = 0.9, wmin = 0.4 i startujemy od wmax i spadamy do wmin z kazda iteracja. n general, the values of C1 and C2 are kept constant. An empirically found optimum pair seems to be 2.05 for each of C1 and C2 and significant departures or incorrect initializations lead to divergent behavior.  Ratnaweera et al.  suggested that C1 should be decreased linearly over time, whereas C2 should be increased linearly [link: https://www.researchgate.net/publication/324558373_Particle_Swarm_Optimization_A_Survey_of_Historical_and_Recent_Developments_with_Hybridization_Perspectives]
+        3. [link: https://www.researchgate.net/publication/296636431_Codes_in_MATLAB_for_Particle_Swarm_Optimization]
+            wmax=0.9;       % inertia weight
+            wmin=0.4;       % inertia weight
+            c1=2;           % acceleration factor
+            c2=2;           % acceleration factor
+
         :return:
         """
         Particle.num_features_select = self.num_features_select
@@ -38,7 +51,7 @@ class PSO(Base):
         Initialize swarm of particles
         :return self.swarm (list[Particle]):                swarm of particles
         """
-        self.set_particles_parameters()
+        # self.set_particles_parameters()
         self.swarm = [Particle() for d in range(self.num_particles)]
         return self.swarm
 
@@ -57,7 +70,6 @@ class PSO(Base):
                 selected_features.append(float(self.best_global_position[i]))
 
         return selected_features
-
 
     def run(self, get_values_for_selected_features=True, show_logs=True):
         """

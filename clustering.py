@@ -177,19 +177,25 @@ class Clustering:
     def validate_clustering(self):
         """
         Print validation scores for clustering
-        :return:
+        :return validation_scores (dict):       dict with values of validatation scores
         """
+        reference_labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+        validation_scores = {"silhouette_score": silhouette_score(X=self.features, labels=self.labels),
+                             "v_measure_score": v_measure_score(
+                                 labels_true=reference_labels, labels_pred=self.labels),
+                             "adjusted_rand_score": adjusted_rand_score(
+                                 labels_true=reference_labels, labels_pred=self.labels),
+                             "davies_bouldin_score": davies_bouldin_score(X=self.features, labels=self.labels)
+                             }
         print("### Clustering validation scores ###")
         if self.labels is not []:
-            print("silhouette_score: ", silhouette_score(X=self.features, labels=self.labels))
-            print("v_measure_score: ", v_measure_score(
-                labels_true=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2,
-                             2, 2, 2, 2], labels_pred=self.labels))
-            print("adjusted_rand_score: ", adjusted_rand_score(labels_true=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2,
-                             2, 2, 2, 2], labels_pred=self.labels))
-            print("davies_bouldin_score: ", davies_bouldin_score(X=self.features, labels=self.labels))
+            print("silhouette_score: ", validation_scores["silhouette_score"])
+            print("v_measure_score: ", validation_scores["v_measure_score"])
+            print("adjusted_rand_score: ", validation_scores["adjusted_rand_score"])
+            print("davies_bouldin_score: ", validation_scores["davies_bouldin_score"])
         else:
             raise TypeError("Labels are not set")
+        return validation_scores
 
     @staticmethod
     def euclidean_distance(p1, p2):

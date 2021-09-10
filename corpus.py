@@ -3,6 +3,7 @@ import os
 from math import log
 
 class Corpus(Base):
+    OMMITED_FILES = ["requirements.txt", "results.txt"]
     def __init__(self, name="CORPUS"):
         super().__init__(name)
         self.documents: List[Document] = []
@@ -18,7 +19,7 @@ class Corpus(Base):
         Read documents in corpus.
         """
         for doc in os.listdir():
-            if ".txt" in doc:
+            if ".txt" in doc and doc not in self.OMMITED_FILES :
                 d = Document()
                 d.read_content(filename=doc)
                 d.preprocess_document()
@@ -62,6 +63,18 @@ class Corpus(Base):
 
         for doc in self.documents:
             doc.features = list(doc.tf_idf.values())
+
+    def get_longest_filename(self):
+        """
+        Get longest filename from corpus.
+        :return longest_filename(str):      longest filename from corpus
+        """
+        longest_filename = ""
+        for d in self.documents:
+            if len(d.filename) > len(longest_filename):
+                longest_filename = d.filename
+
+        return longest_filename
 
 
 if __name__ == "__main__":
