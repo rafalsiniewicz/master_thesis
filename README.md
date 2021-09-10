@@ -41,15 +41,15 @@ Piliki tekstowe z instancji testowej powinny znajdować się w lokalizacji pliku
 
 ##### **Parametry:** #####
 > * pso_parameters (dict[str: List[int]]):
-        - max_iter, domyslnie ustawione na [10, 20, 50, 100]
-        - num_features_select, domyslnie ustawione na [1, 2, 3, 5, 10, 20]
-        - num_particles, domyslnie ustawione na [10, 20, 50, 100]
-        - w, domyslnie ustawione na [0.9, 0.8, 0.7, 0.6, 0.5, 0.4]
-        - c1, domyslnie ustawione na [1.5, 1.6, 1.7, 1.8, 1.9, 2]
-        - c2, domyslnie ustawione na [1.5, 1.6, 1.7, 1.8, 1.9, 2]
+        - max_iter, domyslnie ustawione na [10, 20, 50, 100] <br>
+        - num_features_select, domyslnie ustawione na [1, 2, 3, 5, 10, 20]<br>
+        - num_particles, domyslnie ustawione na [10, 20, 50, 100]<br>
+        - w, domyslnie ustawione na [0.9, 0.8, 0.7, 0.6, 0.5, 0.4]<br>
+        - c1, domyslnie ustawione na [1.5, 1.6, 1.7, 1.8, 1.9, 2]<br>
+        - c2, domyslnie ustawione na [1.5, 1.6, 1.7, 1.8, 1.9, 2]<br>
 > * k_means_parameters (dict[str: List[int]]):
-        - k_means_max_iter, domyslnie ustawione na [5, 10, 20, 50]
-        - k_means_n_init, domyslnie ustawione na [10, 20, 50, 100, 200]
+        - k_means_max_iter, domyslnie ustawione na [5, 10, 20, 50]<br>
+        - k_means_n_init, domyslnie ustawione na [10, 20, 50, 100, 200]<br>
 > * selected_key (str)- nazwa parametru dla którego będzie znajdowana najlepsza wartość, przy pozostałych parametrach ustawionych na stałą wartość
 > * select_features (bool)- jeśli wartość ustalona na `true` wtedy cechy będą wyselekcjonowane przy użyciu algorytmu PSO, jeśli na `false` wtedy selekcja cech nie będzie przeprowadzona
 > * instance_folder (str)- nazwa folderu do którego będą zapisywane wyniki (powinien znajdować się w folderze /results)
